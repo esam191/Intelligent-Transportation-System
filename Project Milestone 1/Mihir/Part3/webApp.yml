@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mywebapp
+  labels:
+    run: mywebapp
+spec:
+  type: LoadBalancer
+  ports:
+  - port:              # map port 80 in the service to the container port 8080
+    targetPort: 
+    protocol: TCP
+    name: http
+  selector:
+    run: mywebapp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mywebapp
+spec:
+  replicas: 3        
+  selector:
+    matchLabels:
+      run: mywebapp
+  template:
+    metadata:
+      labels:
+        run: mywebapp
+    spec:
+      containers:
+      - name: mysql
+        image: mysql
+        env:                    # set MYSQL_ROOT_PASSWORD to password and MYSQL_DATABASE to myDB
+        - name:  
+          value: 
+        ports:
+        - containerPort:        # expose the MySQL default port 
+      - name: webapp
+        image:                  # set the image name
+        ports:
+        - containerPort: 8080
