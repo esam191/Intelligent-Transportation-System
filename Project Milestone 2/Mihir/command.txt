@@ -1,0 +1,17 @@
+docker-compose up -d
+docker exec broker1 kafka-topics --create --topic topic  --partitions 3 --replication-factor 3 --if-not-exists --bootstrap-server broker1:9092
+docker exec broker1 kafka-topics --create --topic topic2 --partitions 3 --replication-factor 2 --if-not-exists --bootstrap-server broker1:9092,broker2:9092,broker3:9092
+docker exec broker1 kafka-topics --describe --bootstrap-server broker1:9092
+docker exec broker1 kafka-topics --list --bootstrap-server broker1:9092
+
+docker exec broker2 bash -c "echo 'value1' | kafka-console-producer --request-required-acks 1 --broker-list broker2:9092 --topic topic"
+docker exec broker1 bash -c "seq 0 2.5 10 | kafka-console-producer --request-required-acks 1 --broker-list broker3:9092,broker2:9092,broker1:9092 --topic topic"
+docker exec broker1 bash -c "echo key,value| kafka-console-producer --broker-list broker1:9092 --topic topic --property parse.key=true --property key.separator=,"
+
+docker exec broker2 kafka-console-consumer --bootstrap-server broker1:9092 --topic topic --from-beginning
+docker exec broker2 kafka-console-consumer --bootstrap-server broker1:9092 --topic topic --from-beginning --max-messages 10
+
+docker exec -it broker1 kafka-console-producer --broker-list broker1:9092,broker2:9092,broker3:9092 --topic topic2
+docker exec broker1 kafka-console-consumer --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --topic topic2 --from-beginning
+
+docker-compose down
