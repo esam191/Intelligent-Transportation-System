@@ -16,5 +16,5 @@ with open("ontarioTech.jpg", "rb") as f:
         
 producer = KafkaProducer(bootstrap_servers=bootstrap_servers,security_protocol='SASL_SSL',sasl_mechanism='PLAIN',\
     sasl_plain_username=sasl_plain_username,sasl_plain_password=sasl_plain_password,key_serializer=lambda v: v.encode())
-producer.send('Images', value,key='OntarioTech');
+producer.send('ToRedis', value,key='OntarioTech');
 producer.close();
