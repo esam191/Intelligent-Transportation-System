@@ -1,0 +1,43 @@
+{
+  "connect.name": "test",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long"
+    },
+    {
+      "default": null,
+      "name": "name",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "default": null,
+      "name": "email",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "default": null,
+      "name": "department",
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name": "modified",
+      "type": {
+        "connect.name": "org.apache.kafka.connect.data.Timestamp",
+        "connect.version": 1,
+        "type": "long"
+      }
+    }
+  ],
+  "name": "test",
+  "type": "record"
+}
