@@ -1,0 +1,138 @@
+# https://github.com/GoogleCloudPlatform/dataflow-prediction-example
+
+cd ~
+git clone https://github.com/goergedaoud/SOFE4630U-tut4.git
+cd ~/SOFE4630U-tut4/mnist
+
+source ~/env/bin/activate
+pip install tensorflow-cpu==2.8.0
+
+python ./predictV1.py \
+    --staging_location ./staging \
+    --temp_location ./temp \
+    --model ./data \
+    --source text \
+	--setup_file ./setup.py \
+    --input ./data/images.txt \
+    --output ./predict
+
+PROJECT=$(gcloud config list project --format "value(core.project)")
+echo $PROJECT
+BUCKET=gs://$PROJECT-gs
+echo $BUCKET
+
+gsutil cp data/export* $BUCKET/model/
+gsutil cp data/images.txt $BUCKET/input/
+
+python ./predictV1.py \
+    --runner DataflowRunner \
+    --project $PROJECT \
+    --staging_location $BUCKET/staging \
+    --temp_location $BUCKET/temp \
+    --model $BUCKET/model \
+    --source text \
+	--setup_file ./setup.py \
+    --input $BUCKET/input/images.txt \
+    --output $BUCKET/output/predict \
+	--region  northamerica-northeast2 \
+	--experiment use_unsupported_python_version
+	 
+# gcloud config set compute/zone northamerica-northeast2-a
+# gcloud container clusters create gk-cluster --num-nodes=3
+# gcloud container clusters get-credentials gk-cluster
+
+kubectl apply -f mysql-pvc.yaml
+kubectl apply -f mysql-app.yaml
+kubectl get services
+MYSQLIP=$(kubectl get services mysql -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo $MYSQLIP
+pip install beam-nuggets
+mysql -uuser -pSOFE4630U  -h$MYSQLIP <./data/images.sql
+
+python ./predictV2.py \
+    --staging_location ./staging \
+    --temp_location ./temp \
+    --setup_file ./setup.py \
+    --model ./data \
+    --source mysql \
+	--input $MYSQLIP \
+    --output $MYSQLIP
+
+mysql -uuser -pSOFE4630U  -h$MYSQLIP <<<"use myDB; show tables;"
+mysql -uuser -pSOFE4630U  -h$MYSQLIP <<<"select * from myDB.results;"
+mysql -uuser -pSOFE4630U  -h$MYSQLIP <<<"drop table myDB.results;"
+
+python ./predictV2.py \
+    --staging_location ./staging \
+    --temp_location ./temp \
+    --setup_file ./setup.py \
+    --model ./data \
+    --source mysql \
+	--input $MYSQLIP \
+    --output $MYSQLIP
+
+python ./predictV2.py \
+    --runner DataflowRunner \
+    --project $PROJECT \
+    --staging_location $BUCKET/staging \
+    --temp_location $BUCKET/temp \
+    --model $BUCKET/model \
+    --source mysql \
+	--setup_file ./setup.py \
+	--input $MYSQLIP \
+    --output $MYSQLIP \
+	--region  northamerica-northeast2 \
+     --experiment use_unsupported_python_version
+
+python ./predictV3.py \
+    --staging_location ./staging \
+    --temp_location ./temp \
+    --setup_file ./setup.py \
+    --model ./data \
+    --source kafka \
+	--input mnist_image \
+    --output mnist_predict
+
+python ./predictV3.py \
+    --runner DataflowRunner \
+    --project $PROJECT \
+    --staging_location $BUCKET/staging \
+    --temp_location $BUCKET/temp \
+    --model $BUCKET/model \
+    --source kafka \
+	--setup_file ./setup.py \
+	--input mnist_image \
+	--output mnist_predict \
+	--region  northamerica-northeast2 \
+	--experiment use_unsupported_python_version
+	
+#optional  bq
+python ./predictV4.py \
+    --runner DataflowRunner \
+    --project $PROJECT \
+    --staging_location $BUCKET/staging \
+    --temp_location $BUCKET/temp \
+    --model $BUCKET/model \
+    --source bq \
+	--setup_file ./setup.py \
+    --input $PROJECT:mnist.images \
+    --output $PROJECT:mnist.predict\
+	--region  northamerica-northeast2 \
+	--experiment use_unsupported_python_version
+	
+#optional bupSub
+# service account   role
+python ./predictV4.py \
+    --runner DataflowRunner \
+    --project $PROJECT \
+    --staging_location $BUCKET/staging \
+    --temp_location $BUCKET/temp \
+    --model $BUCKET/model \
+    --source PubSub \
+	--setup_file ./setup.py \
+    --input projects/$PROJECT/topics/mnist_image	\
+    --output projects/$PROJECT/topics/mnist_predict \
+	--region  northamerica-northeast2 \
+	--experiment use_unsupported_python_version \
+	--streaming 
+pip install --upgrade google-cloud-pubsublite

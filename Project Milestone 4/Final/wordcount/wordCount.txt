@@ -1,0 +1,54 @@
+# https://cloud.google.com/dataflow/docs/quickstarts/quickstart-python
+# create new project
+# Dataflow api
+# service account   create
+
+cd ~
+python3 -m venv env
+source ~/env/bin/activate
+pip install pip --upgrade
+pip install 'apache-beam[gcp]'
+
+python -m apache_beam.examples.wordcount --output outputs
+more outputs*
+
+find ~/env -name 'wordcount.py'
+cp /home/goergedaoud2/env/lib/python3.9/site-packages/apache_beam/examples/wordcount.py ~/wordcount.py
+python wordcount.py --output outputs
+
+
+#  cloud storage create
+PROJECT=$(gcloud config list project --format "value(core.project)")
+echo $PROJECT
+BUCKET=gs://$PROJECT-gs
+echo $BUCKET
+
+python wordcount.py \
+     --region northamerica-northeast2 \
+	 --runner DataflowRunner \
+     --project $PROJECT \
+     --temp_location $BUCKET/tmp/ \
+     --output $BUCKET/result/outputs \
+	 --experiment use_unsupported_python_version
+
+python wordcount.py \
+     --region northamerica-northeast2 \
+     --runner DataflowRunner \
+     --project $PROJECT \
+     --temp_location $BUCKET/tmp/ \
+     --input gs://dataflow-samples/shakespeare/winterstale.txt \
+     --output $BUCKET/result/outputs \
+     --experiment use_unsupported_python_version
+	 
+python wordcount2.py \
+     --region northamerica-northeast2 \
+     --runner DataflowRunner \
+     --project $PROJECT \
+     --temp_location $BUCKET/tmp/ \
+     --input gs://dataflow-samples/shakespeare/winterstale.txt \
+     --output $BUCKET/result/outputs \
+     --output2 $BUCKET/result/outputs2 \
+     --experiment use_unsupported_python_version
+    
+	
+	    
