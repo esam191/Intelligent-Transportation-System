@@ -1,0 +1,16 @@
+
+Because we cannot upload files (or the activity doesnt necessarily ask us to), I have added here the link to access gCloudStorage URI
+gs://cloudcomputing-345522-gs
+
+The folder attached is has all the files from cloud storage. Used command below to copy and download the entire folder.
+ 
+gsutil -m cp -r \
+  "gs://cloudcomputing-345522-gs/input" \
+  "gs://cloudcomputing-345522-gs/model" \
+  "gs://cloudcomputing-345522-gs/output" \
+  "gs://cloudcomputing-345522-gs/result" \
+  "gs://cloudcomputing-345522-gs/staging" \
+  "gs://cloudcomputing-345522-gs/temp" \
+  "gs://cloudcomputing-345522-gs/tmp" \
+  .
+ 
