@@ -1,0 +1,3 @@
+
+Because we cannot upload files (or the activity doesnt necessarily ask us to), I have added here the link to access gCloudStorage URI
+gs://cloudcomputing-345522-gs
